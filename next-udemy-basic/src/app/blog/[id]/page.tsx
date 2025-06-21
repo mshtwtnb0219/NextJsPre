@@ -8,6 +8,14 @@ type Params = {
     }>
 }
 
+// 動的にメタデータする
+export async function generateMetadata({ params }: Params) {
+    const {id} = await params
+    return {
+        title : `ブログ記事ID ${id}`
+    }
+}
+
 export default async function page({ params }: Params) {
 
     // console.log(params);
