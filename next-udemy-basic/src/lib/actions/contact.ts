@@ -1,8 +1,9 @@
+import { Contact } from './../../generated/prisma/index.d';
 // server actionを使用したい場合は以下のディレクティブを記述する
 'use server'
 import { redirect } from "next/navigation"
 import { ContactSchema } from "@/validations/contact"
-
+import { prisma } from '@/lib/prisma'
 
 // ActionStateの型定義
 type ActionState = {
@@ -17,8 +18,8 @@ type ActionState = {
 
 // FormData型はjavascriptでも良く使われる入力フォームで使用される際の型
 export async function submitContactFomrm(prevState: ActionState, formData: FormData): Promise<ActionState> {
-    const name = formData.get('name')
-    const email = formData.get('email')
+    const name = formData.get('name') as string
+    const email = formData.get('email') as string
 
     // バリデーション
     const validatationResult = ContactSchema.safeParse({ name, email })
@@ -35,6 +36,22 @@ export async function submitContactFomrm(prevState: ActionState, formData: FormD
         }
     }
     // DB登録
+
+    const existingRecords = await prisma.contact.findUnique({
+        where: { email: email }
+    })
+    if (existingRecords) {
+        return {
+            success: false,
+            errors: {
+                name: [], email: ['このメールアドレスはすでに登録されています']
+            }
+        }
+    }
+
+    await prisma.contact.create({
+        data:{name,email}
+    })
 
 
     console.log('送信されたデータ', { name, email })
